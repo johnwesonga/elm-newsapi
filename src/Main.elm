@@ -1,16 +1,25 @@
 module Main exposing (..)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Api exposing (..)
 import Types exposing (..)
 import RemoteData exposing (..)
+import Route exposing (parseLocation)
+import Navigation exposing (Location)
+import View exposing (view)
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model [] [] "" RemoteData.Loading, fetchSources )
+initialModel : Route -> Model
+initialModel route =
+    (Model [] [] "" RemoteData.Loading route)
+
+
+init : Location -> ( Model, Cmd Msg )
+init location =
+    let
+        currentRoute =
+            parseLocation location
+    in
+        ( initialModel currentRoute, fetchSources )
 
 
 
@@ -20,12 +29,6 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        LoadSources ->
-            ( model, getSources )
-
-        LoadArticles ->
-            ( model, getArticles "bbc-news" )
-
         GetSources (Ok result) ->
             ( { model | sourceList = result }, Cmd.none )
 
@@ -38,90 +41,31 @@ update msg model =
         OnFetchSources response ->
             ( { model | sources = response }, Cmd.none )
 
+        OnLocationChange location ->
+            let
+                newRoute =
+                    parseLocation location
+            in
+                ( { model | route = newRoute }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )
-
-
-
----- VIEW ----
-
-
-view : Model -> Html Msg
-view model =
-    div [ class "container" ]
-        [ h1 [] [ text "Your Elm App is working!" ]
-        , button [ onClick LoadSources ] [ text "Load Sources!" ]
-        , button [ onClick LoadArticles ] [ text "Load Articles!" ]
-        , viewNewsSourcesList model
-        , viewFetchSources model.sources
-        , p []
-            [ if (model.error /= "") then
-                text ("Error:" ++ model.error)
-              else
-                text ""
-            ]
-        ]
-
-
-viewFetchSources : WebData (List Source) -> Html Msg
-viewFetchSources response =
-    div []
-        [ maybeList response
-        ]
-
-
-maybeList : WebData (List Source) -> Html Msg
-maybeList response =
-    case response of
-        RemoteData.NotAsked ->
-            text ""
-
-        RemoteData.Loading ->
-            text "Loading..."
-
-        RemoteData.Success source ->
-            list source
-
-        RemoteData.Failure error ->
-            text (toString error)
-
-
-list : List Source -> Html Msg
-list source =
-    div [ class "newsSource" ]
-        [ source
-            |> List.map viewNewsSource
-            |> ul []
-        ]
-
-
-viewNewsSourcesList : Model -> Html Msg
-viewNewsSourcesList model =
-    div [ class "newsSource" ]
-        [ model.sourceList
-            |> List.map viewNewsSource
-            |> ul []
-        ]
-
-
-viewNewsSource : Source -> Html Msg
-viewNewsSource source =
-    li []
-        [ a [ href ("/#headlines/" ++ source.id) ]
-            [ text source.name
-            ]
-        ]
 
 
 
 ---- PROGRAM ----
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
 main : Program Never Model Msg
 main =
-    Html.program
+    Navigation.program OnLocationChange
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }

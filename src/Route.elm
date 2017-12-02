@@ -8,9 +8,8 @@ import Types exposing (Route(..))
 matchers : Parser (Route -> a) a
 matchers =
     oneOf
-        [ map ArticlesRoute top
-        , map ArticleRoute (s "headlines" </> string)
-        , map ArticlesRoute (s "articles")
+        [ map Home top
+        , map HeadlinesRoute (s "headlines" </> string)
         ]
 
 
