@@ -10,7 +10,7 @@ import View exposing (view)
 
 initialModel : Route -> Model
 initialModel route =
-    (Model [] [] "" RemoteData.Loading route)
+    (Model RemoteData.Loading RemoteData.Loading route)
 
 
 init : Location -> ( Model, Cmd Msg )
@@ -29,27 +29,34 @@ init location =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GetSources (Ok result) ->
-            ( { model | sourceList = result }, Cmd.none )
-
-        GetSources (Err error) ->
-            { model | error = toString error } ! []
-
-        GetArticles (Ok result) ->
-            ( { model | articleList = result }, Cmd.none )
-
         OnFetchSources response ->
-            ( { model | sources = response }, Cmd.none )
+            { model | sources = response } ! []
+
+        OnFetchHeadlines response ->
+            { model | headlines = response } ! []
 
         OnLocationChange location ->
             let
                 newRoute =
                     parseLocation location
             in
-                ( { model | route = newRoute }, Cmd.none )
+                urlUpdate { model | route = newRoute }
 
         _ ->
             ( model, Cmd.none )
+
+
+urlUpdate : Model -> ( Model, Cmd Msg )
+urlUpdate model =
+    case model.route of
+        Home ->
+            model ! []
+
+        HeadlinesRoute sourceId ->
+            { model | headlines = RemoteData.Loading } ! [ fetchHeadlines sourceId ]
+
+        _ ->
+            model ! []
 
 
 

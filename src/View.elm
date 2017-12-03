@@ -5,6 +5,7 @@ import Html.Attributes exposing (class)
 import Types exposing (..)
 import News.Headlines
 import News.Sources
+import Api
 
 
 view : Model -> Html Msg
@@ -22,7 +23,7 @@ page model =
             News.Sources.view model.sources
 
         HeadlinesRoute sourceId ->
-            headlinesFoundView
+            News.Headlines.headlinesViewPage model sourceId
 
         NotFoundRoute ->
             notFoundView
@@ -32,11 +33,4 @@ notFoundView : Html msg
 notFoundView =
     div []
         [ text "Not found"
-        ]
-
-
-headlinesFoundView : Html msg
-headlinesFoundView =
-    div []
-        [ text "Headlines view here"
         ]

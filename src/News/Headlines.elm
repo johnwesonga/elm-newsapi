@@ -4,26 +4,20 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Types exposing (..)
 import RemoteData exposing (..)
+import Api exposing (..)
 
 
-view : WebData (List Article) -> Html Msg
-view response =
-    div []
-        [ maybeList response
-        ]
-
-
-maybeList : WebData (List Article) -> Html Msg
-maybeList response =
-    case response of
+headlinesViewPage : Model -> String -> Html Msg
+headlinesViewPage model sourceId =
+    case model.headlines of
         RemoteData.NotAsked ->
             text ""
 
         RemoteData.Loading ->
-            text "Loading..."
+            text "Loading ..."
 
-        RemoteData.Success articles ->
-            list articles
+        RemoteData.Success headlines ->
+            list headlines
 
         RemoteData.Failure error ->
             text (toString error)
@@ -41,4 +35,5 @@ list articles =
 viewArticles : Article -> Html Msg
 viewArticles article =
     li []
-        []
+        [ text article.description
+        ]

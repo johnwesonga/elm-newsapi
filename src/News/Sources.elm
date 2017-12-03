@@ -41,7 +41,7 @@ list source =
 viewNewsSource : Source -> Html Msg
 viewNewsSource source =
     li []
-        [ a [ href ("/#headlines/" ++ source.id) ]
+        [ a [ href ("#headlines/" ++ source.id) ]
             [ text source.name
             ]
         ]

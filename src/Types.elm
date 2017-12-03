@@ -10,17 +10,14 @@ import Navigation exposing (Location)
 
 type Msg
     = NoOp
-    | GetSources (Result Http.Error (List Source))
-    | GetArticles (Result Http.Error (List Article))
     | OnFetchSources (WebData (List Source))
+    | OnFetchHeadlines (WebData (List Article))
     | OnLocationChange Location
 
 
 type alias Model =
-    { articleList : List Article
-    , sourceList : List Source
-    , error : String
-    , sources : WebData (List Source)
+    { sources : WebData (List Source)
+    , headlines : WebData (List Article)
     , route : Route
     }
 
@@ -53,11 +50,11 @@ type alias ArticleSource =
 type alias Article =
     { source : ArticleSource
     , title : String
-    , author : String
+    , author : Maybe String
     , description : String
-    , url : String
-    , urlToImage : String
-    , publishedAt : String
+    , url : Maybe String
+    , urlToImage : Maybe String
+    , publishedAt : Maybe String
     }
 
 
@@ -65,7 +62,11 @@ type alias Article =
 --ROUTE --
 
 
+type alias SourceId =
+    String
+
+
 type Route
     = Home
-    | HeadlinesRoute String
+    | HeadlinesRoute SourceId
     | NotFoundRoute

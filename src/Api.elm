@@ -1,7 +1,7 @@
 module Api exposing (..)
 
-import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline as Pipeline exposing (decode, required)
+import Json.Decode exposing (int, map2, string, float, nullable, field, list, Decoder)
+import Json.Decode.Pipeline as Pipeline exposing (decode, required, optional)
 import Http
 import Types exposing (..)
 import RemoteData exposing (..)
@@ -15,33 +15,24 @@ apiUrl str =
 sourceDecoder : Decoder Source
 sourceDecoder =
     decode Source
-        |> required "id" Decode.string
-        |> required "name" Decode.string
-        |> required "description" Decode.string
-        |> required "url" Decode.string
-        |> required "category" Decode.string
-        |> required "language" Decode.string
-        |> required "country" Decode.string
+        |> required "id" string
+        |> required "name" string
+        |> required "description" string
+        |> required "url" string
+        |> required "category" string
+        |> required "language" string
+        |> required "country" string
 
 
 sourceListDecoder : Decoder (List Source)
 sourceListDecoder =
-    Decode.field "sources" (Decode.list sourceDecoder)
+    field "sources" (list sourceDecoder)
 
 
 fetch : Decoder a -> String -> (Result Http.Error a -> b) -> Cmd b
 fetch decoder url action =
     Http.get url decoder
         |> Http.send action
-
-
-getSources : Cmd Msg
-getSources =
-    let
-        sourceUrl =
-            apiUrl ("/sources")
-    in
-        fetch sourceListDecoder sourceUrl GetSources
 
 
 fetchSources : Cmd Msg
@@ -57,32 +48,36 @@ fetchSources =
 
 decodeArticleSource : Decoder ArticleSource
 decodeArticleSource =
-    Decode.map2 ArticleSource
-        (Decode.field "id" Decode.string)
-        (Decode.field "name" Decode.string)
+    Json.Decode.map2 ArticleSource
+        (field "id" string)
+        (field "name" string)
 
 
 articleDecoder : Decoder Article
 articleDecoder =
     decode Article
         |> required "source" (decodeArticleSource)
-        |> required "title" Decode.string
-        |> required "author" Decode.string
-        |> required "description" Decode.string
-        |> required "url" Decode.string
-        |> required "urlToImage" Decode.string
-        |> required "publishedAt" Decode.string
+        |> required "title" string
+        |> required "author" (nullable string)
+        |> required "description" string
+        |> required "url" (nullable string)
+        |> required "urlToImage" (nullable string)
+        |> required "publishedAt" (nullable string)
 
 
 articleListDecoder : Decoder (List Article)
 articleListDecoder =
-    Decode.field "articles" (Decode.list articleDecoder)
+    field "articles" (list articleDecoder)
 
 
-getArticles : String -> Cmd Msg
-getArticles source =
+fetchHeadlines : String -> Cmd Msg
+fetchHeadlines sourceId =
     let
         articlesUrl =
-            apiUrl ("/top-headlines?sources=" ++ source)
+            "https://newsapi.org/v2/top-headlines?sources=" ++ sourceId ++ "&apiKey=a688e6494c444902b1fc9cb93c61d697"
+
+        --apiUrl ("/top-headlines?sources=" ++ sourceId)
     in
-        fetch articleListDecoder articlesUrl GetArticles
+        Http.get articlesUrl articleListDecoder
+            |> RemoteData.sendRequest
+            |> Cmd.map OnFetchHeadlines
